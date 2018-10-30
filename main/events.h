@@ -12,6 +12,7 @@ typedef enum {
 } event_type_t;
 
 typedef enum {
+	EVENT_TYPE_MOTOR_WHEEL_SPEED = 0x02,
 	EVENT_TYPE_POSITION_GPS_COORDINATES = 0x00,
 	EVENT_TYPE_POSITION_GPS_RAW = 0x80
 } event_subtype_t;
