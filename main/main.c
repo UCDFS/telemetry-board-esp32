@@ -6,37 +6,27 @@
 #include "nvs_flash.h"
 #include "driver/gpio.h"
 
-esp_err_t event_handler(void *ctx, system_event_t *event)
+#define PRIORITY_TASK_STATUS_LED 0
+
+#define STATUS_LED_GPIO GPIO_NUM_13
+#define STATUS_LED_ON_TIME 100
+#define STATUS_LED_OFF_TIME 1000
+
+static void blink_status_led()
 {
-    return ESP_OK;
+    gpio_set_direction(STATUS_LED_GPIO, GPIO_MODE_OUTPUT);
+
+    while (true) {
+        gpio_set_level(STATUS_LED_GPIO, true);
+        vTaskDelay(STATUS_LED_ON_TIME / portTICK_PERIOD_MS);
+        gpio_set_level(STATUS_LED_GPIO, false);
+        vTaskDelay(STATUS_LED_OFF_TIME / portTICK_PERIOD_MS);
+    }
 }
 
 void app_main(void)
 {
-    nvs_flash_init();
-    tcpip_adapter_init();
-    ESP_ERROR_CHECK( esp_event_loop_init(event_handler, NULL) );
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
-    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-    ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-    wifi_config_t sta_config = {
-        .sta = {
-            .ssid = "access_point_name",
-            .password = "password",
-            .bssid_set = false
-        }
-    };
-    ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &sta_config) );
-    ESP_ERROR_CHECK( esp_wifi_start() );
-    ESP_ERROR_CHECK( esp_wifi_connect() );
-
-    gpio_set_direction(GPIO_NUM_4, GPIO_MODE_OUTPUT);
-    int level = 0;
-    while (true) {
-        gpio_set_level(GPIO_NUM_4, level);
-        level = !level;
-        vTaskDelay(300 / portTICK_PERIOD_MS);
-    }
+    // Initiate status led task
+    xTaskCreatePinnedToCore(blink_status_led, "blink_status_led", 64, NULL, PRIORITY_TASK_STATUS_LED, NULL, APP_CPU_NUM);
 }
 
