@@ -7,6 +7,7 @@
 #include "nvs_flash.h"
 #include "driver/gpio.h"
 #include "driver/uart.h"
+#include "rom/crc.h"
 
 #include "events.h"
 
@@ -98,6 +99,9 @@ static void telemetry_send_task()
     while (true) {
         // Lock
         xSemaphoreTake(packet_write_sem, portMAX_DELAY);
+
+        // Calculate checksum
+        packet.data_checksum = crc32_le(0, packet.data, packet.data_length);
 
         // TODO: Send packet
 
