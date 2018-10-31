@@ -1,11 +1,6 @@
 #ifndef EVENTS_H
 #define EVENTS_H
 
-#define PROTOCOL_HEADER_BIT 0xf5
-#define PROTOCOL_VERSION 1
-#define PROTOCOL_GIT_HASH 0
-#define PROTOCOL_PACKET_BUFFER_SIZE 2048
-
 typedef struct telemetry_packet_t {
     uint8_t protocol;
     uint8_t protocol_version;

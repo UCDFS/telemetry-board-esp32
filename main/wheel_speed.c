@@ -12,6 +12,13 @@
 #include "events.h"
 #include "wheel_speed.h"
 
+#define WHEEL_SPEED_FL_GPIO GPIO_NUM_36
+#define WHEEL_SPEED_FR_GPIO GPIO_NUM_35
+#define WHEEL_SPEED_RL_GPIO GPIO_NUM_39
+#define WHEEL_SPEED_RR_GPIO GPIO_NUM_34
+#define WHEEL_SPEED_GPIO_SEL GPIO_SEL_36 | GPIO_SEL_35 | GPIO_SEL_39 | GPIO_SEL_34
+#define WHEEL_SPEED_WAIT_TIME 100
+
 volatile uint8_t wheel_speed_counters[4];
 
 static void IRAM_ATTR wheel_speed_isr_handler(void* arg);

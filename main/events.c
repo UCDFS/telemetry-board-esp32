@@ -11,6 +11,11 @@
 
 #include "events.h"
 
+#define PROTOCOL_HEADER_BIT 0xf5
+#define PROTOCOL_VERSION 1
+#define PROTOCOL_GIT_HASH 0
+#define PROTOCOL_PACKET_BUFFER_SIZE 2048
+
 static SemaphoreHandle_t packet_write_sem;
 static telemetry_packet_t packet = {.protocol = PROTOCOL_HEADER_BIT, .protocol_version = PROTOCOL_VERSION,
     .git_hash = PROTOCOL_GIT_HASH, .event_count = 0, .data_length = 0, .data_checksum = 0};
