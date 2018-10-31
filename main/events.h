@@ -1,6 +1,24 @@
 #ifndef EVENTS_H
 #define EVENTS_H
 
+#define PROTOCOL_HEADER_BIT 0xf5
+#define PROTOCOL_VERSION 1
+#define PROTOCOL_GIT_HASH 0
+#define PROTOCOL_PACKET_BUFFER_SIZE 2048
+
+typedef struct telemetry_packet_t {
+    uint8_t protocol;
+    uint8_t protocol_version;
+    uint8_t mac_address[6];
+    uint32_t session_id;
+    uint32_t git_hash;
+    uint64_t time_since_boot;
+    uint16_t event_count;
+    uint16_t data_length;
+    uint32_t data_checksum;
+    uint8_t data[PROTOCOL_PACKET_BUFFER_SIZE];
+} telemetry_packet_t;
+
 typedef enum {
 	EVENT_TYPE_SYSTEM = 0x00,
 	EVENT_TYPE_CAR = 0x01,
@@ -23,5 +41,8 @@ typedef struct event_t {
 	uint8_t data_length;
 	uint8_t time_since_packet;
 } event_t;
+
+void write_event(event_type_t event_type, event_subtype_t event_subtype, void* data_ptr, size_t data_length);
+void telemetry_send_task();
 
 #endif
