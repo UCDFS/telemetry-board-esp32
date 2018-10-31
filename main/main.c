@@ -73,6 +73,7 @@ void write_event(event_type_t event_type, event_subtype_t event_subtype, void* d
     xSemaphoreTake(packet_write_sem, portMAX_DELAY);
     event_t event = {.type = event_type, .subtype = event_subtype, .data_length = data_length, .time_since_packet = esp_timer_get_time() - packet.time_since_boot};
     void* write_ptr = packet.data + packet.data_length;
+    packet.event_count++;
     packet.data_length += sizeof(event_t) + data_length;
     xSemaphoreGive(packet_write_sem);
 
