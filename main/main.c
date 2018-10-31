@@ -70,9 +70,8 @@ uint8_t wheel_speed_rpms[4];
 
 void write_event(event_type_t event_type, event_subtype_t event_subtype, void* data_ptr, size_t data_length)
 {
-    event_t event = {.type = event_type, .subtype = event_subtype, .data_length = data_length, .time_since_packet = esp_timer_get_time() - packet.time_since_boot};
-
     xSemaphoreTake(packet_write_sem, portMAX_DELAY);
+    event_t event = {.type = event_type, .subtype = event_subtype, .data_length = data_length, .time_since_packet = esp_timer_get_time() - packet.time_since_boot};
     void* write_ptr = packet.data + packet.data_length;
     packet.data_length += sizeof(event_t) + data_length;
     xSemaphoreGive(packet_write_sem);
