@@ -1,6 +1,6 @@
-#ifndef GPS_H
-#define GPS_H
+#ifndef UCDFS_TELEMETRY_GPS_H
+#define UCDFS_TELEMETRY_GPS_H
 
 void gps_read_task();
 
-#endif
+#endif //UCDFS_TELEMETRY_GPS_H

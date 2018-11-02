@@ -1,0 +1,6 @@
+#ifndef UCDFS_TELEMETRY_ACCELEROMETER_H
+#define UCDFS_TELEMETRY_ACCELEROMETER_H
+
+void accelerometer_read_task();
+
+#endif //UCDFS_TELEMETRY_ACCELEROMETER_H

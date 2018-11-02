@@ -1,0 +1,27 @@
+menu "UCDFS Telemetry"
+
+config WIFI_SSID
+    string "WiFi SSID"
+    default "ucdfs"
+    help
+	WiFi SSID for the station to connect to.
+
+config WIFI_PASSWORD
+    string "WiFi Password"
+    default "ucdfs"
+    help
+	WiFi password (WPA or WPA2) for the station to use.
+
+config TELEMETRY_SERVER_HOST
+    string "Telemetry Server Host"
+    default "192.168.0.100"
+    help
+    Telemetry server to send telemetry data to.
+
+config TELEMETRY_SERVER_PORT
+    int "Telemetry Server Port"
+    default "37823"
+    help
+    Telemetry server to send telemetry data to.
+
+endmenu
