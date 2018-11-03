@@ -1,15 +1,23 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+#include <esp_err.h>
+#include <esp_event_legacy.h>
+#include <esp_wifi.h>
+#include <esp_event_loop.h>
 #include <nvs_flash.h>
 
 #include <driver/i2c.h>
+#include <esp_log.h>
+#include <string.h>
+#include "i2c_bus.h"
 
+
+#include "accelerometer.h"
 #include "gps.h"
+#include "i2c.h"
 #include "telemetry.h"
 #include "wheel_speed.h"
-#include "wifi.h"
-#include "accelerometer.h"
 
 #define PRIORITY_TASK_TELEMETRY 10
 #define PRIORITY_TASK_GPS 2
@@ -21,29 +29,61 @@
 #define STATUS_LED_ON_TIME 100
 #define STATUS_LED_OFF_TIME 1000
 
-#define I2C_NUM I2C_NUM_0
-#define I2C_SDA_GPIO GPIO_NUM_26
-#define I2C_SCL_GPIO GPIO_NUM_25
-#define I2C_FREQUENCY 400000
-
 #define DISPLAY_UART UART_NUM_1
 #define DISPLAY_TXD GPIO_NUM_2
 #define DISPLAY_RXD GPIO_NUM_4
 #define DISPLAY_BUFFER_SIZE 32
 
-static void i2c_master_init()
-{
-	i2c_config_t conf = {
-			.mode 			= I2C_MODE_MASTER,
-			.sda_io_num 	= I2C_SDA_GPIO,
-			.sda_pullup_en 	= GPIO_PULLUP_ENABLE,
-			.scl_io_num 	= I2C_SCL_GPIO,
-			.scl_pullup_en 	= GPIO_PULLUP_ENABLE,
-			.master.clk_speed = I2C_FREQUENCY
-	};
-	i2c_param_config(I2C_NUM, &conf);
+static TaskHandle_t telemetry_task_handle = NULL;
 
-	i2c_driver_install(I2C_NUM, conf.mode, 0, 0, 0);
+static esp_err_t event_handler(void *ctx, system_event_t *event)
+{
+	switch (event->event_id) {
+		case SYSTEM_EVENT_STA_START: {
+			esp_wifi_connect();
+			break;
+		}
+		case SYSTEM_EVENT_STA_CONNECTED: {
+		    // Write event
+            system_event_sta_connected_t *connected = &event->event_info.connected;
+		    t_ev_sys_wifi_connected_t t_ev;
+		    memcpy(t_ev.ssid, connected->ssid, sizeof(connected->ssid));
+			telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_CONNECTED, &t_ev, sizeof(t_ev));
+			break;
+		}
+		case SYSTEM_EVENT_STA_DISCONNECTED: {
+		    // Write event
+            system_event_sta_disconnected_t *disconnected = &event->event_info.disconnected;
+            t_ev_sys_wifi_disconnected_t t_ev;
+            memcpy(t_ev.ssid, disconnected->ssid, sizeof(disconnected->ssid));
+            t_ev.reason = disconnected->reason;
+			telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_CONNECTED, &t_ev, sizeof(t_ev));
+			break;
+		}
+		case SYSTEM_EVENT_STA_GOT_IP: {
+		    // Write event
+		    system_event_sta_got_ip_t *got_ip = &event->event_info.got_ip;
+		    t_ev_sys_wifi_got_ip t_ev;
+		    t_ev.addr = got_ip->ip_info.ip.addr;
+		    t_ev.changed = got_ip->ip_changed;
+            telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_GOT_IP, &t_ev, sizeof(t_ev));
+
+			// Initiate telemetry send task
+			xTaskCreatePinnedToCore(telemetry_send_task, "telemetry_send_task", 2048, NULL, PRIORITY_TASK_TELEMETRY,
+					&telemetry_task_handle, APP_CPU_NUM);
+			break;
+		}
+		case SYSTEM_EVENT_STA_LOST_IP: {
+			// Write event
+			telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_LOST_IP, NULL, 0);
+
+			// Stop telemetry send task
+			vTaskDelete(telemetry_task_handle);
+		}
+		default:
+			break;
+	}
+	return ESP_OK;
 }
 
 static void blink_status_led_task()
@@ -59,11 +99,30 @@ static void blink_status_led_task()
 	}
 }
 
+void wifi_init()
+{
+	tcpip_adapter_init();
+	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
+
+	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+	wifi_config_t wifi_config = {
+			.sta = {
+					.ssid = CONFIG_WIFI_SSID,
+					.password = CONFIG_WIFI_PASSWORD,
+			},
+	};
+
+	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+	ESP_ERROR_CHECK(esp_wifi_start());
+}
+
 void app_main(void)
 {
 	// Initiate status led task
 	xTaskCreatePinnedToCore(blink_status_led_task, "blink_status_led", 1024, NULL, PRIORITY_TASK_STATUS_LED, NULL,
-							APP_CPU_NUM);
+			APP_CPU_NUM);
 
 	// Initialize NVS
 	esp_err_t ret = nvs_flash_init();
@@ -73,22 +132,18 @@ void app_main(void)
 	}
 	ESP_ERROR_CHECK(ret);
 
+	// Initialize telemetry system
+	telemetry_init();
+
 	// Initialize WiFi
 	wifi_init();
 
 	// Initialize I2C
-	i2c_master_init();
-
-	// Wait for WiFi to connect
-	vTaskDelay(5000 / portTICK_PERIOD_MS);
-
-	// Initiate telemetry send task
-	xTaskCreatePinnedToCore(telemetry_send_task, "telemetry_send_task", 2048, NULL, PRIORITY_TASK_TELEMETRY, NULL,
-							APP_CPU_NUM);
+	i2c_bus_init();
 
 	// Initiate accelerometer read task
 	xTaskCreatePinnedToCore(accelerometer_read_task, "accelerometer_read_task", 2048, NULL, PRIORITY_TASK_ACCELEROMETER, NULL,
-							APP_CPU_NUM);
+			APP_CPU_NUM);
 
 	return;
 
