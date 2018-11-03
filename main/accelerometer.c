@@ -3,29 +3,35 @@
 
 #include "accelerometer.h"
 #include "i2c.h"
-#include "mma8451.h"
+#include "mpu6050.h"
 #include "telemetry.h"
 
-#define ACCELEROMETER_REFRESH_RATE 50
+#define ACCELEROMETER_REFRESH_RATE 10
 
 void accelerometer_read_task()
 {
 	// Initialize MMA8451 accelerometer
-	mma8451_handle_t mma8451_dev = mma8451_init(i2c_bus_get(), MMA8451_I2C_ADDR_2);
-	if (mma8451_set_mode(mma8451_dev, MMA8451_HIGH_RES, MMA8451_DATA_RATE_50HZ, false, false) != ESP_OK) {
+	mpu6050_handle_t mpu6050_dev = mpu6050_init(i2c_bus_get(), MPU6050_I2C_ADDR_1);
+	if (mpu6050_setup(mpu6050_dev, ACCELEROMETER_REFRESH_RATE, MPU6050_DLPF_94HZ_98HZ) != ESP_OK) {
 		vTaskDelete(NULL);
 	};
+	mpu6050_set_accel_scale(mpu6050_dev, MPU6050_ACCEL_SCALE_2G);
+	mpu6050_set_gyro_scale(mpu6050_dev, MPU6050_GYRO_SCALE_2000DPS);
 
-	mma8451_float_data_t data;
+	mpu6050_float_data_t data;
 	while (true) {
 		// Read values
-		mma8451_get_float_data(mma8451_dev, &data);
+		mpu6050_get_float_data(mpu6050_dev, &data);
 
 		// Normalize to linear acceleration
-		data.az -= 1;
+		//data.accel.az -= 1;
+
+		ESP_LOGI("MPU6050", "ax: %6.2f, ay: %6.2f, az: %6.2f, gx: %8.2f, gy: %8.2f, gz: %8.2f, temp: %3.1f",
+				data.accel.ax, data.accel.ay, data.accel.az, data.gyro.gx, data.gyro.gy, data.gyro.gz, data.temp);
 
 		// Write event
-		telemetry_write_event(EVENT_TYPE_SENSOR, EVENT_TYPE_SENSOR_ACCELEROMETER, &data, sizeof(data));
+		telemetry_write_event(EVENT_TYPE_SENSOR, EVENT_TYPE_SENSOR_ACCELEROMETER, &data.accel, sizeof(data));
+		telemetry_write_event(EVENT_TYPE_SENSOR, EVENT_TYPE_SENSOR_GYROSCOPE, &data.gyro, sizeof(data));
 
 		vTaskDelay(1000 / ACCELEROMETER_REFRESH_RATE / portTICK_PERIOD_MS);
 	}
