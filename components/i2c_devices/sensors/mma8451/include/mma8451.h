@@ -55,14 +55,15 @@ typedef struct
 typedef struct mma8451_dev_t *mma8451_handle_t;
 
 mma8451_handle_t mma8451_init(i2c_bus_handle_t bus, uint8_t dev_addr);
-
 void mma8451_delete(mma8451_handle_t dev, bool del_bus);
 
-esp_err_t mma8451_set_mode(mma8451_handle_t dev, mma8451_oversampling_mode_t oversampling_mode, mma8451_data_rate_t data_rate,
-					  bool low_noise, bool fast_read);
+esp_err_t mma8451_setup(mma8451_handle_t dev, mma8451_oversampling_mode_t oversampling_mode,
+		mma8451_data_rate_t data_rate,
+		bool low_noise, bool fast_read);
 
 esp_err_t mma8451_set_scale(mma8451_handle_t dev, mma8451_scale_t scale);
 
+esp_err_t mma8451_get_raw_data(mma8451_handle_t dev, mma8451_raw_data_t *raw);
 esp_err_t mma8451_get_float_data(mma8451_handle_t dev, mma8451_float_data_t *data);
 
 

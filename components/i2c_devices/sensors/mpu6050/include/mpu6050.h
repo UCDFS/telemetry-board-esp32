@@ -77,7 +77,6 @@ typedef struct
 typedef struct mpu6050_dev_t *mpu6050_handle_t;
 
 mpu6050_handle_t mpu6050_init(i2c_bus_handle_t bus, uint8_t dev_addr);
-
 void mpu6050_delete(mpu6050_handle_t dev, bool del_bus);
 
 esp_err_t mpu6050_setup(mpu6050_handle_t dev, uint8_t data_rate, mpu6050_dlpf_t dlpf);
