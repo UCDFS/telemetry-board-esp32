@@ -2,11 +2,10 @@
 
 #include "esp_log.h"
 
+#include <driver/i2c.h>
 #include "i2c_bus.h"
-#include "driver/i2c.h"
 
 #include "mma8451.h"
-#include "../../i2c_bus/include/i2c_bus.h"
 
 #define MMA8451_TAG "MMA8451"
 

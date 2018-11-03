@@ -2,7 +2,7 @@
 #define MMA8451_H
 
 #include <driver/i2c.h>
-#include "../../../i2c_bus/include/i2c_bus.h"
+#include "i2c_bus.h"
 
 #define MMA8451_CHIP_ID 0x1A
 

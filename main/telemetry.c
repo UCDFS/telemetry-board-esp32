@@ -6,6 +6,8 @@
 
 #include "telemetry.h"
 
+#define DEBUG_TELEMETRY false
+
 #define TELEMETRY_REFRESH_RATE 50
 
 #define PROTOCOL_HEADER_BIT 0xf5
@@ -125,7 +127,7 @@ void telemetry_send_task()
 			ESP_LOGE(TAG, "Error occured during sending: errno %d", errno);
 			break;
 		}
-		//ESP_LOGD(TAG, "Sent packet with %d events, data length %d", packet.event_count, packet.data_length);
+		if (DEBUG_TELEMETRY) ESP_LOGI(TAG, "Sent packet with %d events, data length %d", packet.event_count, packet.data_length);
 
 		// Prepare next packet
 		packet.time_since_boot = (uint64_t) esp_timer_get_time();
