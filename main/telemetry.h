@@ -67,6 +67,11 @@ typedef struct {
 	bool changed;
 } t_ev_sys_wifi_got_ip;
 
+typedef struct {
+	uint8_t ssid[32];
+	int8_t rssi;
+} t_ev_sys_wifi_signal_strength;
+
 void telemetry_init();
 
 bool telemetry_write_event(telemetry_event_type_t event_type, telemetry_event_subtype_t event_subtype, void *data_ptr,

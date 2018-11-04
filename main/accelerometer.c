@@ -81,7 +81,7 @@ void accelerometer_read_task()
 		calibration.gyro.gx = calibration.gyro.gy = calibration.gyro.gz = 0;
 	}
 
-	ESP_LOGI(TAG, "Self calibration completed with %d samples, offsets:" \
+	ESP_LOGI(TAG, "Self calibration completed with %d samples, offsets: " \
 			"ax: %.2f, ay: %.2f, az: %.2f, gx: %.2f, gy: %.2f, gz: %.2f", samples,
 			calibration.accel.ax, calibration.accel.ay, calibration.accel.az,
 			calibration.gyro.gx, calibration.gyro.gy, calibration.gyro.gz);
