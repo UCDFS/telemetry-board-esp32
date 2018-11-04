@@ -108,7 +108,7 @@ mpu6050_handle_t mpu6050_init(i2c_bus_handle_t bus, uint8_t dev_addr)
 		return NULL;
 	}
 
-	// reset the sensor
+	// Reset the sensor
 	if (mpu6050_reset(dev) != ESP_OK) {
 		error_dev("Could not reset the sensor device.", __FUNCTION__, dev);
 		free(dev);
@@ -194,7 +194,7 @@ esp_err_t mpu6050_setup(mpu6050_handle_t dev, uint8_t data_rate, mpu6050_dlpf_t 
 	}
 	config.DLPF_CFG = dlpf;
 
-	// Write back register values
+	// Write register values
 	if (mpu6050_reg_write(dev, MPU6050_REG_SMPLRT_DIV, (uint8_t *) &smplrt_div, 1) != ESP_OK ||
 	    mpu6050_reg_write(dev, MPU6050_REG_CONFIG, (uint8_t *) &config, 1) != ESP_OK) {
 		return ESP_FAIL;
@@ -286,5 +286,5 @@ esp_err_t mpu6050_get_float_data(mpu6050_handle_t dev, mpu6050_float_data_t *dat
 
 	data->temp = (float) (raw.temp * MPU6050_TEMP_SCALE + MPU6050_TEMP_OFFSET);
 
-	return true;
+	return ESP_OK;
 }

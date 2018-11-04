@@ -58,7 +58,6 @@ struct mma8451_dev_t
 	bool fast_read;
 
 	mma8451_scale_t scale;
-	mma8451_data_rate_t data_rate;
 };
 
 #define mma8451_update_reg(dev, addr, type, elem, value) \
@@ -83,7 +82,6 @@ mma8451_handle_t mma8451_init(i2c_bus_handle_t bus, uint8_t dev_addr)
 
 	dev->active = false;
 	dev->scale = MMA8451_SCALE_2G;
-	dev->data_rate = MMA8451_DATA_RATE_800HZ;
 	dev->fast_read = false;
 
 	if (!mma8451_is_available(dev)) {
@@ -92,7 +90,7 @@ mma8451_handle_t mma8451_init(i2c_bus_handle_t bus, uint8_t dev_addr)
 		return NULL;
 	}
 
-	// reset the sensor
+	// Reset the sensor
 	if (mma8451_reset(dev) != ESP_OK) {
 		error_dev("Could not reset the sensor device.", __FUNCTION__, dev);
 		free(dev);
@@ -251,5 +249,5 @@ esp_err_t mma8451_get_float_data(mma8451_handle_t dev, mma8451_float_data_t *dat
 	data->ay = (float) (MMA8451_SCALES[dev->scale] * (raw.ay >> 2));
 	data->az = (float) (MMA8451_SCALES[dev->scale] * (raw.az >> 2));
 
-	return true;
+	return ESP_OK;
 }

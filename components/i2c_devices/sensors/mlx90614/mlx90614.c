@@ -182,5 +182,5 @@ esp_err_t mlx90614_get_celcius(mlx90614_handle_t dev, float *data)
 
 	*data = (float) ((raw * MLX90614_TEMP_SCALE) + MLX90614_TEMP_OFFSET);
 
-	return true;
+	return ESP_OK;
 }
