@@ -101,6 +101,8 @@ static void blink_status_led_task()
 
 void wifi_init()
 {
+	esp_log_level_set("wifi", ESP_LOG_WARN);
+
 	tcpip_adapter_init();
 	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
 

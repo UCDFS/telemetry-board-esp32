@@ -1,5 +1,6 @@
 menu "UCDFS Telemetry"
 
+
 config WIFI_SSID
     string "WiFi SSID"
     default "ucdfs"
@@ -7,21 +8,136 @@ config WIFI_SSID
 	WiFi SSID for the station to connect to.
 
 config WIFI_PASSWORD
-    string "WiFi Password"
+    string "WiFi password"
     default "ucdfs"
     help
 	WiFi password (WPA or WPA2) for the station to use.
 
+
 config TELEMETRY_SERVER_HOST
-    string "Telemetry Server Host"
+    string "Telemetry server host"
     default "192.168.0.100"
     help
     Telemetry server to send telemetry data to.
 
 config TELEMETRY_SERVER_PORT
-    int "Telemetry Server Port"
+    int "Telemetry server port"
     default "37823"
     help
     Telemetry server to send telemetry data to.
+
+config I2C_BUS_ENABLED
+    bool "I2C bus"
+    default y
+
+config I2C_BUS_SDA_GPIO
+    int "SDA GPIO pin"
+    depends on I2C_BUS_ENABLED
+    default 26
+
+config I2C_BUS_SCL_GPIO
+    int "SCL GPIO pin"
+    depends on I2C_BUS_ENABLED
+    default 25
+
+menuconfig MOTION_SENSOR_ENABLED
+    bool "Accelerometer & gyroscope (MPU6050)"
+    depends on I2C_BUS_ENABLED
+    default y
+    help
+    Enables the MPU6050 accelerometer and gyroscope module
+
+choice MOTION_SENSOR_I2C_ADDRESS
+    prompt "I2C address"
+    depends on MOTION_SENSOR_ENABLED
+    default MOTION_SENSOR_MPU6050_I2C_ADDR_LOW
+
+config MOTION_SENSOR_MPU6050_I2C_ADDR_LOW
+    bool "0x68 (ADD0 Low)"
+
+config MOTION_SENSOR_MPU6050_I2C_ADDR_HIGH
+    bool "0x69 (ADD0 High)"
+
+endchoice
+
+config MOTION_SENSOR_EVENT_RATE
+    int "Event generation rate (Hz)"
+    depends on MOTION_SENSOR_ENABLED
+    default 50
+    help
+    How often to send accelerometer & gyroscope events to the telemetry system.
+
+config MOTION_SENSOR_MPU6050_SAMPLE_RATE
+    int "Sensor sample rate (Hz)"
+    depends on MOTION_SENSOR_ENABLED
+    default MOTION_SENSOR_EVENT_RATE
+
+choice MOTION_SENSOR_MPU6050_DLPF
+    prompt "Sensor digital low-pass filter rate"
+    depends on MOTION_SENSOR_ENABLED && MOTION_SENSOR_MPU6050
+    default MOTION_SENSOR_MPU6050_DLPF_94HZ_98HZ
+
+config MOTION_SENSOR_MPU6050_DLPF_260HZ_256HZ
+    bool "Accel: 260Hz, Gyro: 256Hz"
+config MOTION_SENSOR_MPU6050_DLPF_184HZ_188HZ
+    bool "Accel: 184Hz, Gyro: 188Hz"
+config MOTION_SENSOR_MPU6050_DLPF_94HZ_98HZ
+    bool "Accel: 94Hz, Gyro: 98Hz"
+config MOTION_SENSOR_MPU6050_DLPF_44HZ_42HZ
+    bool "Accel: 44Hz, Gyro: 42Hz"
+config MOTION_SENSOR_MPU6050_DLPF_21HZ_20HZ
+    bool "Accel: 21Hz, Gyro: 20Hz"
+config MOTION_SENSOR_MPU6050_DLPF_10HZ_10HZ
+    bool "Accel: 10Hz, Gyro: 10Hz"
+config MOTION_SENSOR_MPU6050_DLPF_5HZ_5HZ
+    bool "Accel: 5Hz, Gyro: 5Hz"
+
+endchoice
+
+choice MOTION_SENSOR_ACCELEROMETER_FULL_SCALE_RANGE
+    prompt "Accelerometer full scale range"
+    depends on MOTION_SENSOR_ENABLED
+    default MOTION_SENSOR_ACCELEROMETER_FULL_SCALE_RANGE_2G
+
+config MOTION_SENSOR_ACCELEROMETER_FULL_SCALE_RANGE_2G
+    bool "±2g"
+config MOTION_SENSOR_ACCELEROMETER_FULL_SCALE_RANGE_4G
+    bool "±4g"
+config MOTION_SENSOR_ACCELEROMETER_FULL_SCALE_RANGE_8G
+    bool "±8g"
+config MOTION_SENSOR_ACCELEROMETER_FULL_SCALE_RANGE_16G
+    bool "±16g"
+
+endchoice
+
+choice MOTION_SENSOR_GYROSCOPE_FULL_SCALE_RANGE
+    prompt "Gyroscope full scale range"
+    depends on MOTION_SENSOR_ENABLED
+    default MOTION_SENSOR_GYROSCOPE_FULL_SCALE_RANGE_500DPS
+
+config MOTION_SENSOR_GYROSCOPE_FULL_SCALE_RANGE_250DPS
+    bool "±250°/s"
+config MOTION_SENSOR_GYROSCOPE_FULL_SCALE_RANGE_500DPS
+    bool "±500°/s"
+config MOTION_SENSOR_GYROSCOPE_FULL_SCALE_RANGE_1000DPS
+    bool "±1000°/s"
+config MOTION_SENSOR_GYROSCOPE_FULL_SCALE_RANGE_2000DPS
+    bool "±2000°/s"
+
+endchoice
+
+
+config MOTION_SENSOR_SELF_CALIBRATION_ENABLED
+    bool "Self calibrate sensor values"
+    depends on MOTION_SENSOR_ENABLED
+    default y
+    help
+    Whether to self calibrate the accelerometer
+
+config MOTION_SENSOR_SELF_CALIBRATION_DURATION
+    int "Self calibration duration (ms)"
+    default 1000
+    depends on MOTION_SENSOR_ENABLED && MOTION_SENSOR_SELF_CALIBRATION_ENABLED
+
 
 endmenu

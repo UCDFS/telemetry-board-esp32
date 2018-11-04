@@ -7,7 +7,7 @@ set(COMPONENT_SRCS "main.c"
         )
 set(COMPONENT_ADD_INCLUDEDIRS "")
 
-set(COMPONENT_PRIV_REQUIRES mma8451)
+set(COMPONENT_PRIV_REQUIRES)
 
 register_component()
 
