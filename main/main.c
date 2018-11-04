@@ -17,11 +17,13 @@
 #include "gps.h"
 #include "i2c.h"
 #include "telemetry.h"
+#include "temperature.h"
 #include "wheel_speed.h"
 
 #define PRIORITY_TASK_TELEMETRY 10
 #define PRIORITY_TASK_GPS 2
 #define PRIORITY_TASK_ACCELEROMETER 1
+#define PRIORITY_TASK_TEMPERATURE 1
 #define PRIORITY_TASK_WHEEL_SPEED 1
 #define PRIORITY_TASK_WIFI_STRENGTH 1
 #define PRIORITY_TASK_STATUS_LED 0
@@ -173,6 +175,10 @@ void app_main(void)
 
 	// Initiate accelerometer read task
 	xTaskCreatePinnedToCore(accelerometer_read_task, "accelerometer_read_task", 2048, NULL, PRIORITY_TASK_ACCELEROMETER, NULL,
+			APP_CPU_NUM);
+
+	// Initiate temperature read task
+	xTaskCreatePinnedToCore(temperature_read_task, "temperature_read_task", 2048, NULL, PRIORITY_TASK_TEMPERATURE, NULL,
 			APP_CPU_NUM);
 
 	return;
