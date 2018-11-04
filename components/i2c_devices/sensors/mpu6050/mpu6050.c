@@ -187,7 +187,11 @@ esp_err_t mpu6050_setup(mpu6050_handle_t dev, uint8_t data_rate, mpu6050_dlpf_t 
 
 	dev->active = true;
 
-	smplrt_div.SMPLRT_DIV = dlpf = ((dlpf == MPU6050_DLPF_260HZ_256HZ ? 8000 : 1000) / data_rate) - 1;
+	if (data_rate > 0) {
+		smplrt_div.SMPLRT_DIV = (uint8_t) (((dlpf == MPU6050_DLPF_260HZ_256HZ ? 8000 : 1000) / data_rate) - 1);
+	} else {
+		smplrt_div.SMPLRT_DIV = 0;
+	}
 	config.DLPF_CFG = dlpf;
 
 	// Write back register values
