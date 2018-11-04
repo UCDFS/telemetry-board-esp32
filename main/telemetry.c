@@ -138,7 +138,9 @@ void telemetry_send_task()
 		// Unlock
 		xSemaphoreGive(packet_write_sem);
 
-		vTaskDelay(1000 / TELEMETRY_REFRESH_RATE / portTICK_PERIOD_MS);
+		do {
+			vTaskDelay(1000 / TELEMETRY_REFRESH_RATE / portTICK_PERIOD_MS);
+		} while (packet.event_count == 0);
 	}
 
 	vTaskDelete(NULL);
