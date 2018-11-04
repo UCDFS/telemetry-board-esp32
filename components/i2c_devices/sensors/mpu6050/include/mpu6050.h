@@ -1,5 +1,5 @@
-#ifndef MMA8451_H
-#define MMA8451_H
+#ifndef MPU6050_H
+#define MPU6050_H
 
 #include <driver/i2c.h>
 #include "i2c_bus.h"
