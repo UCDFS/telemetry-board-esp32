@@ -181,10 +181,10 @@ void app_main(void)
 	xTaskCreatePinnedToCore(temperature_read_task, "temperature_read_task", 2048, NULL, PRIORITY_TASK_TEMPERATURE, NULL,
 			APP_CPU_NUM);
 
-	return;
-
 	// Initiate GPS read task
-	xTaskCreatePinnedToCore(gps_read_task, "gps_read_task", 256, NULL, PRIORITY_TASK_GPS, NULL, APP_CPU_NUM);
+	xTaskCreatePinnedToCore(gps_read_task, "gps_read_task", 14096, NULL, PRIORITY_TASK_GPS, NULL, APP_CPU_NUM);
+
+	return;
 
 	// Initiate wheel speed calculation
 	xTaskCreatePinnedToCore(wheel_speed_calculation_task, "wheel_speed_calculation_task", 64, NULL,

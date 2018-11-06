@@ -71,6 +71,18 @@ typedef struct {
 	int8_t rssi;
 } t_ev_sys_wifi_signal_strength;
 
+typedef struct {
+	int32_t latitude;
+	int32_t longitude;
+	int32_t height;
+	uint32_t horizontalAccuracy;
+	uint32_t verticalAccuracy;
+	int32_t groundSpeed;
+	uint32_t speedAccuracy;
+	int32_t heading;
+	uint32_t headingAccuracy;
+} t_ev_pos_gps_coordinates;
+
 void telemetry_init();
 
 bool telemetry_write_event(telemetry_event_type_t event_type, telemetry_event_subtype_t event_subtype, void *data_ptr,
