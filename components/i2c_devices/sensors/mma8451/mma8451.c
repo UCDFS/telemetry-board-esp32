@@ -8,7 +8,7 @@
 
 #define MMA8451_TAG "MMA8451"
 
-#define error_dev(s, f, d, ...) ESP_LOGE(MMA8451_TAG, "%s: bus %d, addr %02x - " s "\n", f, \
+#define error_dev(s, f, d, ...) ESP_LOGE(MMA8451_TAG, "%s: bus %d, addr %02x - " s, f, \
         ((i2c_bus_t *) d->bus)->i2c_port, d->addr, ## __VA_ARGS__)
 
 enum
