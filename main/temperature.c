@@ -15,8 +15,13 @@ void temperature_read_task()
 {
 	// Initialize sensor
 	bme280_handle_t bme280_dev = bme280_init(i2c_bus_get(), BME280_I2C_ADDR_1);
-	ESP_ERROR_CHECK(bme280_setup(bme280_dev, BME280_MODE_NORMAL, BME280_STANDBY_500MS, BME280_IIR_FILTER_COEFFICIENT_16,
-			BME280_SAMPLING_8X, BME280_SAMPLING_8X, BME280_SAMPLING_8X));
+
+	if (bme280_dev == NULL) {
+		vTaskDelete(NULL);
+	}
+
+	ESP_ERROR_CHECK(bme280_setup(bme280_dev, BME280_MODE_NORMAL, BME280_STANDBY_500MS, BME280_IIR_FILTER_OFF,
+			BME280_SAMPLING_2X, BME280_SAMPLING_2X, BME280_SAMPLING_2X));
 
 	bme280_float_data_t data;
 	while (true) {

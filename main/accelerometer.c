@@ -19,6 +19,10 @@ void accelerometer_read_task()
 	// Initialize sensor
 	mpu6050_handle_t mpu6050_dev = mpu6050_init(i2c_bus_get(), MOTION_SENSOR_MPU6050_I2C_ADDR);
 
+	if (mpu6050_dev == NULL) {
+		vTaskDelete(NULL);
+	}
+
 #if CONFIG_MOTION_SENSOR_SELF_CALIBRATION_ENABLED
 	ESP_LOGI(TAG, "Performing self calibration");
 
