@@ -19,6 +19,7 @@
 #include "telemetry.h"
 #include "temperature.h"
 #include "wheel_speed.h"
+#include "status_display.h"
 
 #define PRIORITY_TASK_TELEMETRY 10
 #define PRIORITY_TASK_GPS 2
@@ -172,6 +173,9 @@ void app_main(void)
 
 	// Initialize I2C
 	i2c_bus_init();
+
+	// Initialize status display
+	status_display_init();
 
 	// Initiate accelerometer read task
 	xTaskCreatePinnedToCore(accelerometer_read_task, "accelerometer_read_task", 2048, NULL, PRIORITY_TASK_ACCELEROMETER, NULL,
