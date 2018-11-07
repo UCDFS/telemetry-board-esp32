@@ -59,7 +59,7 @@ esp_err_t i2c_bus_delete(i2c_bus_handle_t bus)
 	return ESP_OK;
 }
 
-esp_err_t i2c_bus_cmd_begin(i2c_bus_handle_t bus, i2c_cmd_handle_t cmd, portBASE_TYPE ticks_to_wait)
+esp_err_t i2c_bus_cmd_begin(i2c_bus_handle_t bus, i2c_cmd_handle_t cmd, TickType_t ticks_to_wait)
 {
 	I2C_BUS_CHECK(bus != NULL, "Handle error", ESP_FAIL);
 	I2C_BUS_CHECK(cmd != NULL, "I2C cmd error", ESP_FAIL);

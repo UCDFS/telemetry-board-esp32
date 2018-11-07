@@ -57,7 +57,7 @@ esp_err_t i2c_bus_delete(i2c_bus_handle_t bus);
  *     - ESP_OK Success
  *     - ESP_FAIL Fail
  */
-esp_err_t i2c_bus_cmd_begin(i2c_bus_handle_t bus, i2c_cmd_handle_t cmd, portBASE_TYPE ticks_to_wait);
+esp_err_t i2c_bus_cmd_begin(i2c_bus_handle_t bus, i2c_cmd_handle_t cmd, TickType_t ticks_to_wait);
 
 /**
  * @brief I2C master read from slave
