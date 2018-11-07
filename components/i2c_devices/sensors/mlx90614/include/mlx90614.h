@@ -4,8 +4,6 @@
 #include <driver/i2c.h>
 #include "i2c_bus.h"
 
-#define MLX90614_CHIP_ID 0x68
-
 #define MLX90614_I2C_ADDR_DEFAULT 0x5a
 
 typedef struct mlx90614_dev_t *mlx90614_handle_t;

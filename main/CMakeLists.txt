@@ -1,5 +1,6 @@
 set(COMPONENT_SRCS "main.c"
         "accelerometer.c"
+        "brake_temperature.c"
         "i2c.c"
         "gps.c"
         "status_display.c"

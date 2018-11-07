@@ -14,6 +14,7 @@
 
 
 #include "accelerometer.h"
+#include "brake_temperature.h"
 #include "gps.h"
 #include "i2c.h"
 #include "telemetry.h"
@@ -24,6 +25,7 @@
 #define PRIORITY_TASK_TELEMETRY 10
 #define PRIORITY_TASK_GPS 2
 #define PRIORITY_TASK_ACCELEROMETER 1
+#define PRIORITY_TASK_BRAKE_TEMPERATURE 1
 #define PRIORITY_TASK_TEMPERATURE 1
 #define PRIORITY_TASK_WHEEL_SPEED 1
 #define PRIORITY_TASK_WIFI_STRENGTH 1
@@ -178,12 +180,13 @@ void app_main(void)
 	status_display_init();
 
 	// Initiate accelerometer read task
-	xTaskCreatePinnedToCore(accelerometer_read_task, "accelerometer_read_task", 2048, NULL, PRIORITY_TASK_ACCELEROMETER, NULL,
-			APP_CPU_NUM);
+	xTaskCreatePinnedToCore(accelerometer_read_task, "accelerometer_read_task", 2048, NULL, PRIORITY_TASK_ACCELEROMETER, NULL, APP_CPU_NUM);
 
 	// Initiate temperature read task
-	xTaskCreatePinnedToCore(temperature_read_task, "temperature_read_task", 2048, NULL, PRIORITY_TASK_TEMPERATURE, NULL,
-			APP_CPU_NUM);
+	xTaskCreatePinnedToCore(temperature_read_task, "temperature_read_task", 2048, NULL, PRIORITY_TASK_TEMPERATURE, NULL, APP_CPU_NUM);
+
+	// Initiate brake temperature read task
+	xTaskCreatePinnedToCore(brake_temperature_read_task, "brake_temperature_read_task", 2048, NULL, PRIORITY_TASK_BRAKE_TEMPERATURE, NULL, APP_CPU_NUM);
 
 	// Initiate GPS read task
 	xTaskCreatePinnedToCore(gps_read_task, "gps_read_task", 14096, NULL, PRIORITY_TASK_GPS, NULL, APP_CPU_NUM);
