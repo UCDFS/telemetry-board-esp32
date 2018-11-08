@@ -101,12 +101,8 @@ void ssd1306_fill_point(ssd1306_handle_t dev, uint8_t x, uint8_t y, bool fill);
  * @param   x2
  * @param   y2
  * @param   fill fill point
- *
- * @return
- *     - ESP_OK Success
- *     - ESP_FAIL Fail
  */
-esp_err_t ssd1306_fill_rectangle(ssd1306_handle_t dev,
+void ssd1306_fill_rectangle(ssd1306_handle_t dev,
         uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
         bool fill);
 
@@ -124,7 +120,7 @@ esp_err_t ssd1306_fill_rectangle(ssd1306_handle_t dev,
  *     - NULL
  */
 void ssd1306_draw_char(ssd1306_handle_t dev, uint8_t x,
-        uint8_t y, uint8_t character, uint8_t font_size, bool fill);
+        uint8_t y, char character, uint8_t font_size, bool fill);
 
 /**
  * @brief   display number on (x, y),and set length, size, mode
@@ -225,8 +221,8 @@ void ssd1306_clear_screen(ssd1306_handle_t dev, uint8_t fill);
  *     - ESP_FAIL Fail
  **/
 esp_err_t ssd1306_draw_string(ssd1306_handle_t dev, uint8_t x,
-        uint8_t y, const uint8_t *text, uint8_t font_size,
-        bool fill);
+		uint8_t y, const char *text, uint8_t font_size,
+		bool fill);
 
 esp_err_t ssd1306_scroll_disable(ssd1306_handle_t dev);
 esp_err_t ssd1306_scroll(ssd1306_handle_t dev, ssd1306_scroll_direction_t direction, ssd1306_scroll_interval_t interval,

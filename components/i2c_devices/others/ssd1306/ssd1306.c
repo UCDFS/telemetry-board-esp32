@@ -19,6 +19,7 @@
 #include <sys/time.h>
 #include <i2c_bus.h>
 #include <string.h>
+#include <math.h>
 
 #define OLED_CONTROL_BYTE_CMD_SINGLE    0x80
 #define OLED_CONTROL_BYTE_CMD_STREAM    0x00
@@ -108,6 +109,14 @@ struct ssd1306_dev_t {
 
 	uint8_t display_buffer[8][128];
 
+	bool updated;
+
+	uint8_t updated_page_min;
+	uint8_t updated_page_max;
+
+	uint8_t updated_column_min;
+	uint8_t updated_column_max;
+
 	uint8_t page_start;
 	uint8_t page_end;
 
@@ -141,14 +150,13 @@ esp_err_t ssd1306_write(ssd1306_handle_t dev, uint8_t mode, uint8_t *data, size_
 	return err;
 }
 
-esp_err_t ssd1306_fill_rectangle(ssd1306_handle_t dev, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, bool fill)
+void ssd1306_fill_rectangle(ssd1306_handle_t dev, uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, bool fill)
 {
 	for (uint8_t x = x1; x <= x2; x++) {
 		for (uint8_t y = y1; y <= y2; y++) {
 			ssd1306_fill_point(dev, x, y, fill);
 		}
 	}
-	return ESP_OK;
 }
 
 void ssd1306_draw_num(ssd1306_handle_t dev, uint8_t x, uint8_t y, uint32_t number, uint8_t length, uint8_t font_size)
@@ -169,24 +177,24 @@ void ssd1306_draw_num(ssd1306_handle_t dev, uint8_t x, uint8_t y, uint32_t numbe
 	}
 }
 
-void ssd1306_draw_char(ssd1306_handle_t dev, uint8_t x, uint8_t y, uint8_t character, uint8_t font_size, bool fill)
+void ssd1306_draw_char(ssd1306_handle_t dev, uint8_t x, uint8_t y, char character, uint8_t font_size, bool fill)
 {
 	uint8_t i, j;
 	uint8_t chTemp, chYpos0 = y;
 
-	character = character - ' ';
+	uint8_t char_offset = (uint8_t) (character - ' ');
 	for (i = 0; i < font_size; i++) {
 		if (font_size == 12) {
 			if (fill) {
-				chTemp = c_chFont1206[character][i];
+				chTemp = c_chFont1206[char_offset][i];
 			} else {
-				chTemp = ~c_chFont1206[character][i];
+				chTemp = ~c_chFont1206[char_offset][i];
 			}
 		} else {
 			if (fill) {
-				chTemp = c_chFont1608[character][i];
+				chTemp = c_chFont1608[char_offset][i];
 			} else {
-				chTemp = ~c_chFont1608[character][i];
+				chTemp = ~c_chFont1608[char_offset][i];
 			}
 		}
 
@@ -205,7 +213,7 @@ void ssd1306_draw_char(ssd1306_handle_t dev, uint8_t x, uint8_t y, uint8_t chara
 }
 
 esp_err_t ssd1306_draw_string(ssd1306_handle_t dev, uint8_t x,
-		uint8_t y, const uint8_t *text, uint8_t font_size,
+		uint8_t y, const char *text, uint8_t font_size,
 		bool fill)
 {
 	esp_err_t ret = ESP_OK;
@@ -242,6 +250,22 @@ void ssd1306_fill_point(ssd1306_handle_t dev, uint8_t x, uint8_t y, bool fill)
 	} else {
 		dev->display_buffer[page][x] &= ~mask;
 	}
+
+	if (!dev->updated || dev->updated_column_min > x) {
+		dev->updated_column_min = x;
+	}
+	if (!dev->updated || dev->updated_column_max < x) {
+		dev->updated_column_max = x;
+	}
+
+	if (!dev->updated || dev->updated_page_min > page) {
+		dev->updated_page_min = page;
+	}
+	if (!dev->updated || dev->updated_page_max < page) {
+		dev->updated_page_max = page;
+	}
+
+	dev->updated = true;
 }
 
 void ssd1306_draw_1616char(ssd1306_handle_t dev, uint8_t x, uint8_t y, uint8_t character)
@@ -342,7 +366,16 @@ esp_err_t ssd1306_refresh(ssd1306_handle_t dev)
 {
 	esp_err_t ret = ESP_OK;
 
-	for (uint8_t i = 0; i < 8; i++) {
+	if (!dev->updated) {
+		return ESP_OK;
+	}
+
+	ssd1306_set_columns(dev, dev->updated_column_min, dev->updated_column_max);
+	ssd1306_set_pages(dev, dev->updated_page_min, dev->updated_page_max);
+
+	dev->updated = false;
+
+	for (uint8_t i = dev->page_start; i <= dev->page_end; i++) {
 		ret = ssd1306_write(dev, SSD1306_DATA, dev->display_buffer[i] + dev->column_start,
 				(size_t) (dev->column_end - dev->column_start + 1));
 		if (ret == ESP_FAIL) {
@@ -402,5 +435,10 @@ esp_err_t ssd1306_scroll(ssd1306_handle_t dev, ssd1306_scroll_direction_t direct
 void ssd1306_clear_screen(ssd1306_handle_t dev, uint8_t chFill)
 {
 	memset(dev->display_buffer, chFill, 8 * 128);
+	dev->updated = true;
+	dev->updated_column_min = 0;
+	dev->updated_column_max = 127;
+	dev->updated_page_min = 0;
+	dev->updated_page_max = 7;
 }
 
