@@ -21,6 +21,7 @@ void brake_temperature_read_task()
 	}
 
 	float data;
+	t_ev_sen_brake_temperature t_ev;
 	while (true) {
 		// Read values
 		mlx90614_get_celcius(mlx90614_dev, &data);
@@ -29,8 +30,13 @@ void brake_temperature_read_task()
 			ESP_LOGI(TAG, "temp: %4.2f°C", data);
 		}
 
+		t_ev.brake_fl = data;
+		t_ev.brake_fr = data;
+		t_ev.brake_rl = data;
+		t_ev.brake_rr = data;
+
 		// Write event
-		telemetry_write_event(EVENT_TYPE_SENSOR, EVENT_TYPE_SENSOR_BRAKE_TEMPERATURE, &data, sizeof(data));
+		telemetry_write_event(EVENT_TYPE_SENSOR, EVENT_TYPE_SENSOR_BRAKE_TEMPERATURE, &t_ev, sizeof(t_ev));
 
 		vTaskDelay(100 / portTICK_PERIOD_MS);
 	}
