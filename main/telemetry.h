@@ -25,6 +25,7 @@ typedef enum
 	EVENT_TYPE_SYSTEM_WIFI_GOT_IP,
 	EVENT_TYPE_SYSTEM_WIFI_LOST_IP,
 	EVENT_TYPE_SYSTEM_WIFI_SIGNAL_STRENGTH,
+	EVENT_TYPE_SYSTEM_TELEMETRY_PACKET_SENT = 0x80,
 
 	EVENT_TYPE_CAR_MOVING = 0x00,
 	EVENT_TYPE_CAR_DRIVER_SELECTED = 0x08,
@@ -54,12 +55,12 @@ typedef enum
 
 typedef struct {
 	uint8_t ssid[32];
-} t_ev_sys_wifi_connected_t;
+} t_ev_sys_wifi_connected;
 
 typedef struct {
 	uint8_t ssid[32];
 	uint8_t reason;
-} t_ev_sys_wifi_disconnected_t;
+} t_ev_sys_wifi_disconnected;
 
 typedef struct {
 	uint32_t addr;
@@ -70,6 +71,31 @@ typedef struct {
 	uint8_t ssid[32];
 	int8_t rssi;
 } t_ev_sys_wifi_signal_strength;
+
+typedef struct {
+	float ax;
+	float ay;
+	float az;
+} t_ev_sen_accelerometer;
+
+typedef struct {
+	float gx;
+	float gy;
+	float gz;
+} t_ev_sen_gyroscope;
+
+typedef struct {
+	float brake_fl;
+	float brake_fr;
+	float brake_rl;
+	float brake_rr;
+} t_ev_sen_brake_temperature;
+
+typedef struct {
+	float temperature;
+	float pressure;
+	float humidity;
+} t_ev_sen_ambient_tph;
 
 typedef struct {
 	int32_t latitude;
@@ -89,5 +115,7 @@ bool telemetry_write_event(telemetry_event_type_t event_type, telemetry_event_su
 						   size_t data_length);
 
 void telemetry_send_task();
+
+void telemetry_set_handler(void (*h)(telemetry_event_type_t, telemetry_event_subtype_t, void *, size_t));
 
 #endif //UCDFS_TELEMETRY_EVENTS_H

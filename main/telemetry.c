@@ -52,6 +52,8 @@ static struct sockaddr_in server_addr;
 
 static const char* TAG = "telemetry";
 
+static void (*handler)(telemetry_event_type_t, telemetry_event_subtype_t, void *, size_t) = NULL;
+
 void telemetry_init() {
 	// Server address
 	server_addr = (struct sockaddr_in) {
@@ -102,6 +104,11 @@ bool telemetry_write_event(telemetry_event_type_t event_type, telemetry_event_su
 	}
 
 	xSemaphoreGive(packet_write_sem);
+
+	if (handler != NULL) {
+		handler(event_type, event_subtype, data_ptr, data_length);
+	}
+
 	return true;
 }
 
@@ -138,10 +145,19 @@ void telemetry_send_task()
 		// Unlock
 		xSemaphoreGive(packet_write_sem);
 
+		// Indicate to handler that packet was sent
+		if (handler != NULL) {
+			handler(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_TELEMETRY_PACKET_SENT, NULL, 0);
+		}
+
 		do {
 			vTaskDelay(1000 / TELEMETRY_REFRESH_RATE / portTICK_PERIOD_MS);
 		} while (packet.event_count == 0);
 	}
 
 	vTaskDelete(NULL);
+}
+
+void telemetry_set_handler(void (*h)(telemetry_event_type_t, telemetry_event_subtype_t, void *, size_t)) {
+	handler = h;
 }

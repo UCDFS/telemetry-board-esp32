@@ -29,6 +29,7 @@
 #define PRIORITY_TASK_TEMPERATURE 1
 #define PRIORITY_TASK_WHEEL_SPEED 1
 #define PRIORITY_TASK_WIFI_STRENGTH 1
+#define PRIORITY_TASK_STATUS_DISPLAY 0
 #define PRIORITY_TASK_STATUS_LED 0
 
 #define STATUS_LED_GPIO GPIO_NUM_13
@@ -70,7 +71,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		case SYSTEM_EVENT_STA_CONNECTED: {
 		    // Write event
             system_event_sta_connected_t *connected = &event->event_info.connected;
-		    t_ev_sys_wifi_connected_t t_ev;
+		    t_ev_sys_wifi_connected t_ev;
 		    memcpy(t_ev.ssid, connected->ssid, sizeof(t_ev.ssid));
 			telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_CONNECTED, &t_ev, sizeof(t_ev));
 
@@ -82,7 +83,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		case SYSTEM_EVENT_STA_DISCONNECTED: {
 		    // Write event
             system_event_sta_disconnected_t *disconnected = &event->event_info.disconnected;
-            t_ev_sys_wifi_disconnected_t t_ev;
+            t_ev_sys_wifi_disconnected t_ev;
             memcpy(t_ev.ssid, disconnected->ssid, sizeof(t_ev.ssid));
             t_ev.reason = disconnected->reason;
 			telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_CONNECTED, &t_ev, sizeof(t_ev));
@@ -99,14 +100,19 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		    t_ev.changed = got_ip->ip_changed;
             telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_GOT_IP, &t_ev, sizeof(t_ev));
 
+			// Initiate HTTP server
+			status_display_http_server_init();
+
 			// Initiate telemetry send task
-			xTaskCreatePinnedToCore(telemetry_send_task, "telemetry_send_task", 2048, NULL, PRIORITY_TASK_TELEMETRY,
-					&telemetry_task_handle, APP_CPU_NUM);
+			xTaskCreatePinnedToCore(telemetry_send_task, "telemetry_send_task", 2048, NULL, PRIORITY_TASK_TELEMETRY, &telemetry_task_handle, APP_CPU_NUM);
 			break;
 		}
 		case SYSTEM_EVENT_STA_LOST_IP: {
 			// Write event
 			telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_LOST_IP, NULL, 0);
+
+			// Stop HTTP server
+			status_display_http_server_stop();
 
 			// Stop telemetry send task
 			vTaskDelete(telemetry_task_handle);
@@ -178,6 +184,9 @@ void app_main(void)
 
 	// Initialize status display
 	status_display_init();
+
+	// Initiate status display task
+	xTaskCreatePinnedToCore(status_display_task, "status_display_task", 2048, NULL, PRIORITY_TASK_STATUS_DISPLAY, NULL, APP_CPU_NUM);
 
 	// Initiate accelerometer read task
 	xTaskCreatePinnedToCore(accelerometer_read_task, "accelerometer_read_task", 2048, NULL, PRIORITY_TASK_ACCELEROMETER, NULL, APP_CPU_NUM);
