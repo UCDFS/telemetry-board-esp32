@@ -167,7 +167,7 @@ void gps_read_task()
 					message[0], message[1], message[2], message[3], message[4], message[5]);
 
 			// Throw away remaining
-			do {} while (uart_read_bytes(GPS_UART, (uint8_t *) &message, 1, 10 / portTICK_PERIOD_MS) > 0);
+			uart_flush(GPS_UART);
 			continue;
 		}
 
@@ -181,7 +181,7 @@ void gps_read_task()
 					message[0], message[1], message[2], message[3], message[4], message[5]);
 
 			// Throw away remaining
-			do {} while (uart_read_bytes(GPS_UART, (uint8_t *) &message, 1, 10 / portTICK_PERIOD_MS) > 0);
+			uart_flush(GPS_UART);
 			continue;
 		}
 
