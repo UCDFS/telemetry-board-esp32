@@ -42,11 +42,6 @@ static const ubx_cfg_msg_t COMMANDS_MESSAGES_SETUP[] = {
 			.msgID = UBX_MESSAGE_ID_NAV_PVT,
 			.rate.uart = 1
 		},
-		{
-			.msgClass = UBX_MESSAGE_CLASS_NAV,
-			.msgID = UBX_MESSAGE_ID_NAV_SAT,
-			.rate.uart = 50
-		},
 		/*{
 			.msgClass = UBX_MESSAGE_CLASS_RXM,
 			.msgID = UBX_MESSAGE_ID_RXM_RAWX,
