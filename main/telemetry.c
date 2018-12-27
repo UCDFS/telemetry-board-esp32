@@ -80,6 +80,15 @@ void telemetry_init() {
 bool telemetry_write_event(telemetry_event_type_t event_type, telemetry_event_subtype_t event_subtype, void *data_ptr,
 						   size_t data_length)
 {
+	if (handler != NULL) {
+		handler(event_type, event_subtype, data_ptr, data_length);
+	}
+
+	// Don't process events when WiFi disabled
+	#ifndef CONFIG_WIFI_ENABLED
+		return false;
+	#endif
+
 	xSemaphoreTake(packet_write_sem, portMAX_DELAY);
 
 	if ((PROTOCOL_PACKET_BUFFER_SIZE - packet.data_length) < (sizeof(telemetry_event_t) + data_length)) {
@@ -104,10 +113,6 @@ bool telemetry_write_event(telemetry_event_type_t event_type, telemetry_event_su
 	}
 
 	xSemaphoreGive(packet_write_sem);
-
-	if (handler != NULL) {
-		handler(event_type, event_subtype, data_ptr, data_length);
-	}
 
 	return true;
 }

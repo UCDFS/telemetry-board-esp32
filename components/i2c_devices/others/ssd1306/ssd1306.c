@@ -143,8 +143,13 @@ esp_err_t ssd1306_write(ssd1306_handle_t dev, uint8_t mode, uint8_t *data, size_
 {
 	esp_err_t err = i2c_bus_master_write(dev->bus, dev->addr, &mode, data, size);
 	if (err) {
-		error_dev("Error %d on write %d byte %s to I2C slave.", __FUNCTION__, dev, err,
-				size, mode == OLED_CONTROL_BYTE_DATA_STREAM ? "data" : "command");
+		if (mode == OLED_CONTROL_BYTE_DATA_STREAM) {
+			error_dev("Error %d on write %d byte data to I2C slave.", __FUNCTION__, dev, err, size);
+		} else if (mode == OLED_CONTROL_BYTE_CMD_SINGLE) {
+			error_dev("Error %d on write command 0x%02hhx to I2C slave.", __FUNCTION__, dev, err, *data);
+		} else if (mode == OLED_CONTROL_BYTE_CMD_STREAM) {
+			error_dev("Error %d on write %d commands (0x%02hhx...) to I2C slave.", __FUNCTION__, dev, err, size, *data);
+		}
 	}
 
 	return err;

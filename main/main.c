@@ -123,6 +123,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 	return ESP_OK;
 }
 
+#ifdef CONFIG_WIFI_ENABLED
 static void wifi_init()
 {
 	esp_log_level_set("wifi", ESP_LOG_WARN);
@@ -143,6 +144,7 @@ static void wifi_init()
 	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
 	ESP_ERROR_CHECK(esp_wifi_start());
 }
+#endif
 
 static void wifi_strength_report_task(void *ctx) {
 	while (true) {
@@ -166,18 +168,25 @@ void app_main(void)
 			APP_CPU_NUM);
 
 	// Initialize NVS
-	esp_err_t ret = nvs_flash_init();
-	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-		ESP_ERROR_CHECK(nvs_flash_erase());
-		ret = nvs_flash_init();
-	}
-	ESP_ERROR_CHECK(ret);
+	#ifdef CONFIG_WIFI_ENABLED
+		esp_err_t ret = nvs_flash_init();
+		if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+			ESP_ERROR_CHECK(nvs_flash_erase());
+			ret = nvs_flash_init();
+		}
+		ESP_ERROR_CHECK(ret);
+	#endif
+
+	// Initialize GPIO
+	gpio_install_isr_service(0);
 
 	// Initialize telemetry system
 	telemetry_init();
 
-	// Initialize WiFi
-	wifi_init();
+	#ifdef CONFIG_WIFI_ENABLED
+		// Initialize WiFi
+		wifi_init();
+	#endif
 
 	// Initialize I2C
 	i2c_bus_init();

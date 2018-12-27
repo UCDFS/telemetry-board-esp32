@@ -1,5 +1,8 @@
 menu "UCDFS Telemetry"
 
+config WIFI_ENABLED
+    bool "WiFi"
+    default y
 
 config WIFI_SSID
     string "WiFi SSID"
