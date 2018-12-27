@@ -339,6 +339,8 @@ ssd1306_handle_t ssd1306_init(i2c_bus_handle_t bus, uint8_t addr)
 		return NULL;
 	}
 
+	dev->page_start = 0;
+	dev->page_end = 7;
 	dev->column_start = 0;
 	dev->column_end = 127;
 
@@ -375,8 +377,10 @@ esp_err_t ssd1306_refresh(ssd1306_handle_t dev)
 		return ESP_OK;
 	}
 
-	ssd1306_set_columns(dev, dev->updated_column_min, dev->updated_column_max);
-	ssd1306_set_pages(dev, dev->updated_page_min, dev->updated_page_max);
+	if (ssd1306_set_columns(dev, dev->updated_column_min, dev->updated_column_max) != ESP_OK ||
+		ssd1306_set_pages(dev, dev->updated_page_min, dev->updated_page_max) != ESP_OK) {
+		return ESP_FAIL;
+	}
 
 	dev->updated = false;
 
@@ -391,8 +395,9 @@ esp_err_t ssd1306_refresh(ssd1306_handle_t dev)
 }
 
 esp_err_t ssd1306_set_pages(ssd1306_handle_t dev, uint8_t start, uint8_t end) {
-	dev->page_start = start;
-	dev->page_end = end;
+	if (dev->page_start == start && dev->page_end == end) {
+		return ESP_OK;
+	}
 
 	uint8_t command[] = {
 			OLED_CMD_SET_PAGE_RANGE,
@@ -400,12 +405,19 @@ esp_err_t ssd1306_set_pages(ssd1306_handle_t dev, uint8_t start, uint8_t end) {
 			end
 	};
 
-	return ssd1306_write(dev, SSD1306_CMD, command, sizeof(command));
+	esp_err_t ret = ssd1306_write(dev, SSD1306_CMD, command, sizeof(command));
+	if (ret == ESP_OK) {
+		dev->page_start = start;
+		dev->page_end = end;
+	}
+
+	return ret;
 }
 
 esp_err_t ssd1306_set_columns(ssd1306_handle_t dev, uint8_t start, uint8_t end) {
-	dev->column_start = start;
-	dev->column_end = end;
+	if (dev->column_start == start && dev->column_end == end) {
+		return ESP_OK;
+	}
 
 	uint8_t command[] = {
 			OLED_CMD_SET_COLUMN_RANGE,
@@ -413,7 +425,13 @@ esp_err_t ssd1306_set_columns(ssd1306_handle_t dev, uint8_t start, uint8_t end) 
 			end
 	};
 
-	return ssd1306_write(dev, SSD1306_CMD, command, sizeof(command));
+	esp_err_t ret = ssd1306_write(dev, SSD1306_CMD, command, sizeof(command));
+	if (ret == ESP_OK) {
+		dev->column_start = start;
+		dev->column_end = end;
+	}
+
+	return ret;
 }
 
 esp_err_t ssd1306_scroll_disable(ssd1306_handle_t dev) {
