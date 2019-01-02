@@ -21,32 +21,13 @@
 #include "temperature.h"
 #include "wheel_speed.h"
 #include "status_display.h"
+#include "task_priorities.h"
+#include "nextion_display.h"
+#include "wifi.h"
 
-#define PRIORITY_TASK_TELEMETRY 10
-#define PRIORITY_TASK_GPS 2
-#define PRIORITY_TASK_ACCELEROMETER 1
-#define PRIORITY_TASK_BRAKE_TEMPERATURE 1
-#define PRIORITY_TASK_TEMPERATURE 1
-#define PRIORITY_TASK_WHEEL_SPEED 1
-#define PRIORITY_TASK_WIFI_STRENGTH 1
-#define PRIORITY_TASK_STATUS_DISPLAY 0
-#define PRIORITY_TASK_STATUS_LED 0
-
-#define STATUS_LED_GPIO GPIO_NUM_13
+#define STATUS_LED_GPIO GPIO_NUM_5
 #define STATUS_LED_ON_TIME 100
 #define STATUS_LED_OFF_TIME 1000
-
-#define WIFI_STRENGTH_REPORT_INTERVAL 15000
-
-#define DISPLAY_UART UART_NUM_1
-#define DISPLAY_TXD GPIO_NUM_2
-#define DISPLAY_RXD GPIO_NUM_4
-#define DISPLAY_BUFFER_SIZE 32
-
-static TaskHandle_t telemetry_task_handle = NULL;
-static TaskHandle_t wifi_strength_task_handle = NULL;
-
-static void wifi_strength_report_task(void *ctx);
 
 static void blink_status_led_task()
 {
@@ -58,106 +39,6 @@ static void blink_status_led_task()
 		vTaskDelay(STATUS_LED_ON_TIME / portTICK_PERIOD_MS);
 		gpio_set_level(STATUS_LED_GPIO, false);
 		vTaskDelay(STATUS_LED_OFF_TIME / portTICK_PERIOD_MS);
-	}
-}
-
-static esp_err_t event_handler(void *ctx, system_event_t *event)
-{
-	switch (event->event_id) {
-		case SYSTEM_EVENT_STA_START: {
-			esp_wifi_connect();
-			break;
-		}
-		case SYSTEM_EVENT_STA_CONNECTED: {
-		    // Write event
-            system_event_sta_connected_t *connected = &event->event_info.connected;
-		    t_ev_sys_wifi_connected t_ev;
-		    memcpy(t_ev.ssid, connected->ssid, sizeof(t_ev.ssid));
-			telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_CONNECTED, &t_ev, sizeof(t_ev));
-
-			// Initiate wifi strength report task
-			xTaskCreatePinnedToCore(wifi_strength_report_task, "wifi_strength_task", 1024, NULL, PRIORITY_TASK_WIFI_STRENGTH,
-					&wifi_strength_task_handle, APP_CPU_NUM);
-			break;
-		}
-		case SYSTEM_EVENT_STA_DISCONNECTED: {
-		    // Write event
-            system_event_sta_disconnected_t *disconnected = &event->event_info.disconnected;
-            t_ev_sys_wifi_disconnected t_ev;
-            memcpy(t_ev.ssid, disconnected->ssid, sizeof(t_ev.ssid));
-            t_ev.reason = disconnected->reason;
-			telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_CONNECTED, &t_ev, sizeof(t_ev));
-
-			// Stop wifi strength report task
-			vTaskDelete(wifi_strength_task_handle);
-			break;
-		}
-		case SYSTEM_EVENT_STA_GOT_IP: {
-		    // Write event
-		    system_event_sta_got_ip_t *got_ip = &event->event_info.got_ip;
-		    t_ev_sys_wifi_got_ip t_ev;
-		    t_ev.addr = got_ip->ip_info.ip.addr;
-		    t_ev.changed = got_ip->ip_changed;
-            telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_GOT_IP, &t_ev, sizeof(t_ev));
-
-			// Initiate HTTP server
-			status_display_http_server_init();
-
-			// Initiate telemetry send task
-			xTaskCreatePinnedToCore(telemetry_send_task, "telemetry_send_task", 2048, NULL, PRIORITY_TASK_TELEMETRY, &telemetry_task_handle, APP_CPU_NUM);
-			break;
-		}
-		case SYSTEM_EVENT_STA_LOST_IP: {
-			// Write event
-			telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_LOST_IP, NULL, 0);
-
-			// Stop HTTP server
-			status_display_http_server_stop();
-
-			// Stop telemetry send task
-			vTaskDelete(telemetry_task_handle);
-		}
-		default:
-			break;
-	}
-	return ESP_OK;
-}
-
-#ifdef CONFIG_WIFI_ENABLED
-static void wifi_init()
-{
-	esp_log_level_set("wifi", ESP_LOG_WARN);
-
-	tcpip_adapter_init();
-	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
-
-	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-	wifi_config_t wifi_config = {
-			.sta = {
-					.ssid = CONFIG_WIFI_SSID,
-					.password = CONFIG_WIFI_PASSWORD,
-			},
-	};
-
-	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-	ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-	ESP_ERROR_CHECK(esp_wifi_start());
-}
-#endif
-
-static void wifi_strength_report_task(void *ctx) {
-	while (true) {
-		wifi_ap_record_t wifi_ap_record;
-		if (esp_wifi_sta_get_ap_info(&wifi_ap_record) == ESP_OK) {
-			t_ev_sys_wifi_signal_strength t_ev;
-			memcpy(t_ev.ssid, wifi_ap_record.ssid, sizeof(t_ev.ssid));
-			t_ev.rssi = wifi_ap_record.rssi;
-
-			telemetry_write_event(EVENT_TYPE_SYSTEM, EVENT_TYPE_SYSTEM_WIFI_SIGNAL_STRENGTH, &t_ev, sizeof(t_ev));
-		};
-
-		vTaskDelay(WIFI_STRENGTH_REPORT_INTERVAL / portTICK_PERIOD_MS);
 	}
 }
 
@@ -194,8 +75,11 @@ void app_main(void)
 	// Initialize status display
 	status_display_init();
 
-	// Initiate status display task
-	xTaskCreatePinnedToCore(status_display_task, "status_display_task", 2048, NULL, PRIORITY_TASK_STATUS_DISPLAY, NULL, APP_CPU_NUM);
+	// Initialize nextion display
+	nextion_display_init();
+
+	// Initialize GPS
+	gps_init();
 
 	// Initiate accelerometer read task
 	xTaskCreatePinnedToCore(accelerometer_read_task, "accelerometer_read_task", 2048, NULL, PRIORITY_TASK_ACCELEROMETER, NULL, APP_CPU_NUM);
@@ -205,9 +89,6 @@ void app_main(void)
 
 	// Initiate brake temperature read task
 	xTaskCreatePinnedToCore(brake_temperature_read_task, "brake_temperature_read_task", 2048, NULL, PRIORITY_TASK_BRAKE_TEMPERATURE, NULL, APP_CPU_NUM);
-
-	// Initiate GPS read task
-	xTaskCreatePinnedToCore(gps_read_task, "gps_read_task", 14096, NULL, PRIORITY_TASK_GPS, NULL, APP_CPU_NUM);
 
 	return;
 

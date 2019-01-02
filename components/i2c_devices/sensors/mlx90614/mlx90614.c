@@ -157,8 +157,9 @@ static bool mlx90614_is_available(mlx90614_handle_t dev)
 {
 	uint16_t chip_id;
 
-	if (mlx90614_reg_read(dev, MLX90614_REG_SMBUS_ADDRESS, &chip_id) != ESP_OK) {
-		error_dev("Could not read chip id.", __FUNCTION__, dev);
+	esp_err_t ret;
+	if ((ret = mlx90614_reg_read(dev, MLX90614_REG_SMBUS_ADDRESS, &chip_id)) != ESP_OK) {
+		error_dev("Could not read chip id, error %d", __FUNCTION__, dev, ret);
 		return false;
 	}
 

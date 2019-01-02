@@ -3,10 +3,12 @@ set(COMPONENT_SRCS "main.c"
         "brake_temperature.c"
         "i2c.c"
         "gps.c"
+        "nextion_display.c"
         "status_display.c"
         "telemetry.c"
         "temperature.c"
-        "wheel_speed.c")
+        "wheel_speed.c"
+        "wifi.c")
 set(COMPONENT_ADD_INCLUDEDIRS "")
 
 set(COMPONENT_PRIV_REQUIRES)

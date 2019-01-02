@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define UBX_HEADER_SYNC_CHAR_1 0xB5
 #define UBX_HEADER_SYNC_CHAR_2 0x62
@@ -21,7 +22,6 @@ typedef enum {
 	UBX_MESSAGE_CLASS_CFG = 0x06, // Configuration Input Messages: Set Dynamic Model, Set DOP Mask, Set Baud Rate, etc.
 	UBX_MESSAGE_CLASS_UPD = 0x09, // Firmware Update Messages: Memory/Flash erase/write, Reboot, Flash identification, etc.
 	UBX_MESSAGE_CLASS_MON = 0x0A, // Monitoring Messages: Communication Status, CPU Load, Stack Usage, Task Status
-	UBX_MESSAGE_CLASS_AID = 0x0B, // AssistNow Aiding Messages: Ephemeris, Almanac, other A-GPS data input
 	UBX_MESSAGE_CLASS_TIM = 0x0D, // Timing Messages: Time Pulse Output, Time Mark Results
 	UBX_MESSAGE_CLASS_ESF = 0x10, // External Sensor Fusion Messages: External Sensor Measurements and Status Information
 	UBX_MESSAGE_CLASS_MGA = 0x13, // Multiple GNSS Assistance Messages: Assistance data for various GNSS
@@ -43,78 +43,13 @@ typedef enum {
 	UBX_MESSAGE_ID_ACK_NAK = 0x00, // Message Not-Acknowledged
 
 	/**
-	 * AID
-	 */
-	UBX_MESSAGE_ID_AID_ALM = 0x30, // Poll GPS Aiding Almanac Data
-	                               // Poll GPS Aiding Almanac Data for a SV
-	                               // GPS Aiding Almanac Input/Output Message
-	UBX_MESSAGE_ID_AID_AOP = 0x33, // Poll AssistNow Autonomous data, all satellites
-	                               // Poll AssistNow Autonomous data, one GPS...
-	                               // AssistNow Autonomous data
-	UBX_MESSAGE_ID_AID_EPH = 0x31, // Poll GPS Aiding Ephemeris Data
-	                               // Poll GPS Aiding Ephemeris Data for a SV
-	                               // GPS Aiding Ephemeris Input/Output Message
-	UBX_MESSAGE_ID_AID_HUI = 0x02, // Poll GPS Health, UTC, ionosphere parameters
-	                               // GPS Health, UTC and ionosphere parameters
-	UBX_MESSAGE_ID_AID_INI = 0x01, // Poll GPS Initial Aiding Data
-	                               // Aiding position, time, frequency, clock drift
-
-	/**
 	 * CFG
 	 */
-	UBX_MESSAGE_ID_CFG_ANT = 0x13, // Antenna Control Settings
-	UBX_MESSAGE_ID_CFG_BATCH = 0x93, // Get/Set data batching configuration
-	UBX_MESSAGE_ID_CFG_CFG = 0x09, // Clear, Save and Load configurations
-	UBX_MESSAGE_ID_CFG_DAT = 0x06, // Set User-defined Datum.
-	                               // The currently defined Datum
-	UBX_MESSAGE_ID_CFG_DGNSS = 0x70, // DGNSS configuration
-	UBX_MESSAGE_ID_CFG_DOSC = 0x61, // Disciplined oscillator configuration
-	UBX_MESSAGE_ID_CFG_DYNSEED = 0x85, // Programming the dynamic seed for the host...
-	UBX_MESSAGE_ID_CFG_ESRC = 0x60, // External synchronization source configuration
-	UBX_MESSAGE_ID_CFG_FIXSEED = 0x84, // Programming the fixed seed for host...
-	UBX_MESSAGE_ID_CFG_GEOFENCE = 0x69, // Geofencing configuration
-	UBX_MESSAGE_ID_CFG_GNSS = 0x3E, // GNSS system configuration
-	UBX_MESSAGE_ID_CFG_HNR = 0x5C, // High Navigation Rate Settings
-	UBX_MESSAGE_ID_CFG_INF = 0x02, // Poll configuration for one protocol
-	                               // Information message configuration
-	UBX_MESSAGE_ID_CFG_ITFM = 0x39, // Jamming/Interference Monitor configuration
-	UBX_MESSAGE_ID_CFG_LOGFILTER = 0x47, // Data Logger Configuration
-	UBX_MESSAGE_ID_CFG_MSG = 0x01, // Poll a message configuration
-	                               // Set Message Rate(s)
-	                               // Set Message Rate
-	UBX_MESSAGE_ID_CFG_NAV5 = 0x24, // Navigation Engine Settings
-	UBX_MESSAGE_ID_CFG_NAVX5 = 0x23, // Navigation Engine Expert Settings
-	                                // Navigation Engine Expert Settings
-	                                // Navigation Engine Expert Settings
-	UBX_MESSAGE_ID_CFG_NMEA = 0x17, // NMEA protocol configuration (deprecated)
-	                                // NMEA protocol configuration V0 (deprecated)
-	                                // Extended NMEA protocol configuration V1
-	UBX_MESSAGE_ID_CFG_ODO = 0x1E, // Odometer, Low-speed COG Engine Settings
-	UBX_MESSAGE_ID_CFG_PM2 = 0x3B, // Extended Power Management configuration
-	                               // Extended Power Management configuration
-	                               // Extended Power Management configuration
-	UBX_MESSAGE_ID_CFG_PMS = 0x86, // Power Mode Setup
-	UBX_MESSAGE_ID_CFG_PRT = 0x00, // Polls the configuration for one I/O Port
-	                               // Port Configuration for UART
-	                               // Port Configuration for USB Port
-	                               // Port Configuration for SPI Port
-	                               // Port Configuration for DDC Port
-	UBX_MESSAGE_ID_CFG_PWR = 0x57, // Put receiver in a defined power state.
-	UBX_MESSAGE_ID_CFG_RATE = 0x08, // Navigation/Measurement Rate Settings
-	UBX_MESSAGE_ID_CFG_RINV = 0x34, // Contents of Remote Inventory
 	UBX_MESSAGE_ID_CFG_RST = 0x04, // Reset Receiver / Clear Backup Data Structures
-	UBX_MESSAGE_ID_CFG_RXM = 0x11, // RXM configuration
-	                               // RXM configuration
-	UBX_MESSAGE_ID_CFG_SBAS = 0x16, // SBAS Configuration
-	UBX_MESSAGE_ID_CFG_SMGR = 0x62, // Synchronization manager configuration
-	UBX_MESSAGE_ID_CFG_TMODE2 = 0x3D, // Time Mode Settings 2
-	UBX_MESSAGE_ID_CFG_TMODE3 = 0x71, // Time Mode Settings 3
-	UBX_MESSAGE_ID_CFG_TP5 = 0x31, // Poll Time Pulse Parameters for Time Pulse 0
-	                               // Poll Time Pulse Parameters
-	                               // Time Pulse Parameters
-	                               // Time Pulse Parameters
-	UBX_MESSAGE_ID_CFG_TXSLOT = 0x53, // TX buffer time slots configuration
-	UBX_MESSAGE_ID_CFG_USB = 0x1B, // USB Configuration
+	UBX_MESSAGE_ID_CFG_VALDEL = 0x8C, // Delete configuration values
+	UBX_MESSAGE_ID_CFG_VALGET = 0x8B, // Get configuration values
+	UBX_MESSAGE_ID_CFG_VALSET = 0x8A, // Set configuration values
+
 
 	/**
 	 * ESF
@@ -197,17 +132,14 @@ typedef enum {
 	 * MON
 	 */
 	UBX_MESSAGE_ID_MON_BATCH = 0x32, // Data batching buffer status
+	UBX_MESSAGE_ID_MON_COMMS = 0x36, // Comm port information
 	UBX_MESSAGE_ID_MON_GNSS = 0x28, // Information message major GNSS selection
-	UBX_MESSAGE_ID_MON_HW2 = 0x0B, // Extended Hardware Status
-	UBX_MESSAGE_ID_MON_HW = 0x09, // Hardware Status
-	UBX_MESSAGE_ID_MON_IO = 0x02, // I/O Subsystem Status
-	UBX_MESSAGE_ID_MON_MSGPP = 0x06, // Message Parse and Process Status
+	UBX_MESSAGE_ID_MON_HW3 = 0x37, // HW I/O pin information
 	UBX_MESSAGE_ID_MON_PATCH = 0x27, // Poll Request for installed patches
 	                                 // Output information about installed patches.
-	UBX_MESSAGE_ID_MON_RXBUF = 0x07, // Receiver Buffer Status
+	UBX_MESSAGE_ID_MON_RF = 0x38, // RF information
 	UBX_MESSAGE_ID_MON_RXR = 0x21, // Receiver Status Information
 	UBX_MESSAGE_ID_MON_SMGR = 0x2E, // Synchronization Manager Status
-	UBX_MESSAGE_ID_MON_TXBUF = 0x08, // Transmitter Buffer Status
 	UBX_MESSAGE_ID_MON_VER = 0x04, // Poll Receiver/Software Version
 	                               // Receiver/Software Version
 
@@ -232,6 +164,7 @@ typedef enum {
 	UBX_MESSAGE_ID_NAV_RESETODO = 0x10, // Reset odometer
 	UBX_MESSAGE_ID_NAV_SAT = 0x35, // Satellite Information
 	UBX_MESSAGE_ID_NAV_SBAS = 0x32, // SBAS Status Data
+	UBX_MESSAGE_ID_NAV_SIG = 0x43, // Signal information
 	UBX_MESSAGE_ID_NAV_SOL = 0x06, // Navigation Solution Information
 	UBX_MESSAGE_ID_NAV_STATUS = 0x03, // Receiver Navigation Status
 	UBX_MESSAGE_ID_NAV_SVINFO = 0x30, // Space Vehicle Information
@@ -271,7 +204,6 @@ typedef enum {
 	/**
 	 * RXM
 	 */
-	UBX_MESSAGE_ID_RXM_IMES = 0x61, // Indoor Messaging System Information
 	UBX_MESSAGE_ID_RXM_MEASX = 0x14, // Satellite Measurements for RRLP
 	UBX_MESSAGE_ID_RXM_PMREQ = 0x41, // Requests a Power Management task
 	                                 // Requests a Power Management task
@@ -282,7 +214,6 @@ typedef enum {
 	UBX_MESSAGE_ID_RXM_RTCM = 0x32, // RTCM input status
 	UBX_MESSAGE_ID_RXM_SFRBX = 0x13, // Broadcast Navigation Data Subframe
 	                                 // Broadcast Navigation Data Subframe
-	UBX_MESSAGE_ID_RXM_SVSI = 0x20, // SV Status Info
 
 	/**
 	 * SEC
@@ -317,6 +248,19 @@ typedef enum {
 } ubx_message_id_t;
 
 /**
+ * UBX CFG Values
+ */
+typedef enum {
+	CFG_UART2_ENABLED = 0x10530005
+} ubx_cfg_val_key_t;
+
+typedef struct {
+	ubx_cfg_val_key_t key;
+	uint64_t val;
+	size_t size;
+} ubx_cfg_val_val_t;
+
+/**
  * Serial Communication Ports
  */
 typedef enum {
@@ -349,140 +293,21 @@ typedef struct {
 /**
  * ACK
  */
+/**
+* ACK-ACK
+*
+* Message Acknowledged
+*/
 typedef struct {
 	ubx_message_class_t clsID :8; // Class ID of the (Not-)Acknowledged Message
 	ubx_message_id_t msgId    :8; // Message ID of the (Not-)Acknowledged Message
 } ubx_ack_ack_t;
 typedef ubx_ack_ack_t ubx_ack_nack_t;
-/**
- * ACK-ACK
- *
- * Message Acknowledged
- */
 
 /** ================================================================================ */
 /**
  * CFG
  */
-/**
- * CFG-CFG
- *
- * Clear, Save and Load configurations
- */
-typedef struct {
-	uint32_t clearMask :32;
-	uint32_t saveMask  :32;
-	uint32_t loadMask  :32;
-} ubx_cfg_cfg_t;
-
-/**
- * CFG-MSG
- *
- * Set Message Rate(s)
- */
-struct ubx_cfg_msg_rate {
-	uint8_t ddc       :8;
-	uint8_t uart      :8;
-	uint8_t reserved1 :8;
-	uint8_t usb       :8;
-	uint8_t spi       :8;
-	uint8_t reserved2 :8;
-};
-typedef struct {
-	uint8_t msgClass :8; // Message class
-	uint8_t msgID    :8; // Message identifier
-	struct ubx_cfg_msg_rate rate; // Send rate on I/O Port (6 Ports)
-} ubx_cfg_msg_t;
-
-/**
- * CFG-PRT
- *
- * Port Configuration for UART
- */
-struct ubx_cfg_prt_bit_txReady {
-	bool en        :1 ; // Enable TX ready feature for this port
-	bool pol       :1 ; // Polarity, 0 = High-active, 1 = Low-active
-	uint8_t pin    :5 ; // PIO to be used (must not be in use already by another function)
-	uint16_t thres :9 ; // Threshold
-	// The given threshold is multiplied by 8 bytes.
-	// The TX ready PIN goes active after >= thres*8 bytes are pending for the port and going inactive after the last
-	// pending bytes have been written to hardware (0-4 bytes before end of stream).
-	// 0x000 no threshold
-	// 0x001 8byte
-	// 0x002 16byte
-	// ...
-	// 0x1FE 4080byte
-	// 0x1FF 4088byte
-};
-struct ubx_cfg_prt_bit_mode {
-	uint8_t reserved1 :6 ; // Reserved
-	uint8_t charLen   :2 ; // Character Length
-	// 00 5bit (not supported)
-	// 01 6bit (not supported)
-	// 10 7bit (supported only with parity)
-	// 11 8bit
-	uint8_t reserved2 :1 ; // Reserved
-	uint8_t parity    :3 ; // 000 Even Parity
-	// 001 Odd Parity
-	// 10X No Parity
-	// X1X Reserved
-	uint8_t nStopBits :2 ; // Number of Stop Bits
-	// 00 1 Stop Bit
-	// 01 1.5 Stop Bit
-	// 10 2 Stop Bit
-	// 11 0.5 Stop Bit
-};
-struct ubx_cfg_prt_bit_inProtoMask {
-	bool inUbx         :1 ; // UBX protocol
-	bool inNmea        :1 ; // NMEA protocol
-	bool inRtcm        :1 ; // RTCM2 protocol
-	uint8_t reserved1  :2 ; // Reserved
-	bool inRtcm3       :1 ; // RTCM3 protocol (not supported in protocol versions less than 20)
-	uint16_t reserved2 :10; // Reserved
-};
-struct ubx_cfg_prt_bit_outProtoMask {
-	bool outUbx        :1 ; // UBX protocol
-	bool outNmea       :1 ; // NMEA protocol
-	uint8_t reserved1  :3 ; // Reserved
-	bool outRtcm3      :1 ; // RTCM3 protocol (not supported in protocol versions less than 20)
-	uint16_t reserved2 :10; // Reserved
-};
-struct ubx_cfg_prt_bit_flags {
-	uint8_t reserved1      :1 ; // Reserved
-	bool extendedTxTimeout :1 ; // Extended TX timeout: if set, the port will timeout if allocated TX memory >=4 kB and no activity for 1.5s.
-	// If not set the port will timoout if no activity for 1.5s regardless on the amount of allocated TX memory
-	uint16_t reserved2     :14; // Reserved
-};
-typedef struct {
-	ubx_port_t portID       :8 ; // Port Identifier Number
-	uint8_t reserved1       :8 ; // Reserved
-	struct ubx_cfg_prt_bit_txReady txReady;       // TX ready PIN configuration
-	struct ubx_cfg_prt_bit_mode mode;             // A bit mask describing the UART mode
-	uint32_t baudRate       :32; // Baud rate (bits/s)
-	struct ubx_cfg_prt_bit_inProtoMask inProtoMask;   // A mask describing which input protocols are active.
-	struct ubx_cfg_prt_bit_outProtoMask outProtoMask; // A mask describing which output protocols are active.
-	struct ubx_cfg_prt_bit_flags flags;               // Flags bit mask
-	uint16_t reserved2      :16; // Reserved
-} ubx_cfg_prt_t;
-
-/**
- * CFG-RATE
- *
- * Navigation/Measurement Rate Settings
- */
-typedef struct {
-	uint16_t measRate :16; // The elapsed time between GNSS measurements (ms), which defines the rate,
- 	                       // e.g. 100ms => 10Hz, 1000ms => 1Hz, 10000ms => 0.1Hz
-	uint16_t navRate  :16; // The ratio between the number of measurements and the number of navigation
-	                       // solutions
-	uint16_t timeRef  :16; // The time system to which measurements are aligned:
-	                       // 0: UTC time
-	                       // 1: GPS time
-	                       // 2: GLONASS time
-	                       // 3: BeiDou time
-	                       // 4: Galileo time
-} ubx_cfg_rate_t;
-
 /**
  * CFG-RST
  */
@@ -500,6 +325,52 @@ typedef struct {
 	                         // 0x09 - Controlled GNSS start
 	uint8_t reserved    :8 ; // Reserved
 } ubx_cfg_rst_t;
+
+/**
+ * CFG-VAL*
+ */
+struct ubx_cfg_layers_t {
+	bool ram            :1; // Apply to RAM layer
+	bool bbr            :1; // Apply to BBR layer
+	bool flash          :1; // Apply to flash layer
+	uint8_t reserved2   :5;
+};
+
+enum ubx_cfg_layer_t {
+	UBX_CFG_LAYER_RAM = 0,
+	UBX_CFG_LAYER_BBR = 1,
+	UBX_CFG_LAYER_FLASH = 2,
+	UBX_CFG_LAYER_DEFAULT = 7
+};
+
+/**
+ * CFG-VALDEL
+ */
+typedef struct {
+	uint8_t version :8;
+	struct ubx_cfg_layers_t layers;
+	uint8_t transaction_action :2;
+	uint16_t reserved :14;
+} ubx_cfg_valdel_header_t;
+
+/**
+ * CFG-VALGET
+ */
+typedef struct {
+	uint8_t version :8;
+	enum ubx_cfg_layer_t layer :8;
+	uint16_t reserved :16;
+} ubx_cfg_valget_header_t;
+
+/**
+ * CFG-VALSET
+ */
+typedef struct {
+	uint8_t version :8;
+	struct ubx_cfg_layers_t layers;
+	uint8_t transaction_action :2;
+	uint16_t reserved :14;
+} ubx_cfg_valset_header_t;
 
 /** ================================================================================ */
 /**
@@ -519,7 +390,7 @@ struct ubx_nav_pvt_bit_valid {
 };
 struct ubx_nav_pvt_bit_flags {
 	bool gnssFixOK     :1 ; // 1 = valid fix (i.e within DOP & accuracy masks)
-	bool diffSOln      :1 ; // 1 = differential corrections were applied
+	bool diffSoln      :1 ; // 1 = differential corrections were applied
 	uint8_t psmState   :3 ; // Power Save Mode state :
 	                        // 0: PSM is not active
 	                        // 1: Enabled (an intermediate state before Acquisition state
@@ -571,14 +442,76 @@ typedef struct {
 	int32_t velE       :32; // NED east velocity (mm/s)
 	int32_t velD       :32; // NED down velocity (mm/s)
 	int32_t gSpeed     :32; // Ground speed (2-D) (mm/s)
-	int32_t headMot    :32; // Heading of motion (2-D) (mm/s 1e-5)
+	int32_t headMot    :32; // Heading of motion (2-D) (deg 1e-5)
 	uint32_t sAcc      :32; // Speed accuracy estimate (mm/s)
 	uint32_t headAcc   :32; // Heading accuracy estimate (both motion and vehicle) (deg 1e-5)
 	uint16_t pDOP      :16; // Position DOP (0.01)
-	uint64_t reserved2 :48; // Reserved
+	uint64_t reserved  :48;
 	int32_t headVeh    :32; // Heading of vehicle (2-D) (deg 1e-5)
 	int16_t magDec     :16; // Magnetic declination (deg 1e-2)
 	uint16_t magAcc    :16; // Magnetic declination accuracy (deg 1e-2)
 } ubx_nav_pvt_t;
+
+/**
+ * NAV-SAT
+ *
+ * Satellite Information
+ */
+struct ubx_nav_sat_bit_flags {
+	uint8_t qualityInd  :3; // Signal quality indicator:
+	                        // 0: no signal
+	                        // 1: searching signal
+	                        // 2: signal acquired
+	                        // 3: signal detected but unusable
+	                        // 4: code locked and time synchronized
+	                        // 5, 6, 7: code and carrier locked and time synchronized
+							// 		 Note: Since IMES signals are not time synchronized, a channel tracking an IMES signal can never reach a quality
+	                        // indicator value of higher than 3
+	bool svUsed         :1; // 1 = Signal in the subset specified in Signal Identifiers is currently being used for navigation
+	uint8_t health      :2; // Signal health flag:
+	                        // 0: unknown
+	                        // 1: healthy
+	                        // 2: unhealthy
+	bool diffCorr       :1; // 1 = differential correction data is available for this SV
+	bool smoothed       :1; // 1 = carrier smoothed pseudorange used
+	uint8_t orbitSource :3; // Orbit source:
+	                        // 0: no orbit information is available for this SV
+	                        // 1: ephemeris is used
+	                        // 2: almanac is used
+	                        // 3: AssistNow Offline orbit is used
+	                        // 4: AssistNow Autonomous orbit is used
+	                        // 5, 6, 7: other orbit information is used
+	bool ephAvail       :1; // 1 = ephemeris is available for this SV
+	bool almAvail       :1; // 1 = almanac is available for this SV
+	bool anoAvail       :1; // 1 = AssistNow Offline data is available for this SV
+	bool aopAvail       :1; // 1 = AssistNow Autonomous data is available for this SV
+	uint8_t reserved1   :1;
+	bool sbasCorrUsed   :1; // 1 = SBAS corrections have been used for a signal in the subset specified in Signal Identifiers
+	bool rtcmCorrUsed   :1; // 1 = RTCM corrections have been used for a signal in the subset specified in Signal Identifiers
+	bool slasCorrUsed   :1; // 1 = QZSS SLAS corrections have been used for a signal in the subset specified in Signal Identifiers
+	uint8_t reserved2   :1;
+	bool prCorrUsed     :1; // 1 = Pseudorange corrections have been used for a signal in the subset specified in Signal Identifiers
+	bool crCorrUsed     :1; // 1 = Carrier range corrections have been used for a signal in the subset specified in Signal Identifiers
+	bool doCorrUsed     :1; // 1 = Range rate (Doppler) corrections have been used for a signal in the subset specified in Signal Identifiers
+	uint16_t reserved3  :9;
+};
+
+typedef struct {
+	uint8_t gnssId :8 ; // GNSS identifier (see Satellite Numbering) for assignment
+	uint8_t svId   :8 ; // Satellite identifier (see Satellite Numbering) for assignment
+	uint8_t cno    :8 ; // Carrier to noise ratio (signal strength) (dbHz)
+	int8_t elev    :8 ; // Elevation (range: +/-90), unknown if out of range (deg)
+	int16_t azim   :16; // Azimuth (range 0-360), unknown if elevation is out of range (deg)
+	int16_t prRes  :16; // Pseudorange residual (m 0.1)
+	struct ubx_nav_sat_bit_flags flags; // Satellite flags
+} ubx_nav_sat_sat_t;
+
+typedef struct {
+	uint32_t iTOW      :32; // GPS time of week of the navigation epoch. (ms)
+	uint8_t version    :8 ; // Message version
+	uint8_t numSvs     :8 ; // Number of satellites
+	uint16_t reserved  :16;
+	ubx_nav_sat_sat_t satellites[]; // Satellites
+} ubx_nav_sat_t;
 
 #endif //UBX_PROTOCOL_H
